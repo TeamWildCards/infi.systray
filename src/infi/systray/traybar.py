@@ -298,7 +298,19 @@ class SysTrayIcon(object):
         if menu_action == SysTrayIcon.QUIT:
             DestroyWindow(self._hwnd)
         else:
-            menu_action(self)
+            index = 0
+            for menu_option in self._menu_options:
+                option_text, option_icon, option_action, option_id = menu_option
+                if option_id == id:
+                    text = option_text
+                    break;
+                index = index + 1
+            if index == len(self._menu_options):
+                #we didn't find the menu item
+                index = -1
+                option_text = None
+
+            menu_action(self, index, option_text)
 
 def non_string_iterable(obj):
     try:
