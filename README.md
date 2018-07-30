@@ -1,22 +1,15 @@
 Overview
 ========
-This module implements a Windows system tray icon with a right-click context menu.
+This module implements a Windows system tray icon with a right-click context menu. This version adds the menu item index number and menu text as keyword arguments.
 
-Installation
-------------
-To install infi.systray, run:
-
-    pip install infi.systray
-
-Alternatively, you can use easy_install.
 
 Usage
 -----
 Creating an icon with one option in the context menu:
 
     from infi.systray import SysTrayIcon
-    def say_hello(systray):
-        print "Hello, World!"
+    def say_hello(systray, **kwargs):
+        print("Hello, World!")
     menu_options = (("Say Hello", None, say_hello),)
     systray = SysTrayIcon("icon.ico", "Example tray icon", menu_options)
     systray.start()
@@ -66,13 +59,13 @@ value of an option, instead of passing a callback function. e.g.
 
     from infi.systray import SysTrayIcon
     hover_text = "SysTrayIcon Demo"
-    def hello(sysTrayIcon):
-        print "Hello World."
-    def simon(sysTrayIcon):
-        print "Hello Simon."
-    def bye(sysTrayIcon):
-        print 'Bye, then.'
-    def do_nothing(sysTrayIcon):
+    def hello(sysTrayIcon, index, option_text):
+        print("Hello World.")
+    def simon(sysTrayIcon, index, option_text):
+        print("Hello Simon.")
+    def bye(sysTrayIcon, index, option_text):
+        print('Bye, then.')
+    def do_nothing(sysTrayIcon, **kwargs):
         pass
     menu_options = (('Say Hello', "hello.ico", hello),
                     ('Do nothing', None, do_nothing),
@@ -83,6 +76,27 @@ value of an option, instead of passing a callback function. e.g.
     sysTrayIcon = SysTrayIcon("main.ico", hover_text, menu_options, on_quit=bye, default_menu_index=1)
     sysTrayIcon.start()
 
+And another example:
+
+    from infi.systray import SysTrayIcon
+    import itertools, glob
+    icons = itertools.cycle(glob.glob('*.ico'))
+    def say_hello(systray, index, option_text):
+        print("Hello, World!")
+        print("You clicked '%s' which was index number %d" % (option_text, index))
+        systray.update(menu_options=(("You already clicked hello", None, say_hello),))
+    def switch_icon(systray, index, option_text):
+        systray.update(icon=next(icons))
+        print("You clicked '%s' which was index number %d" % (option_text, index))
+    def silent_switch_icon(systray, **kwargs):
+        systray.update(icon=next(icons))
+    menu_options = (("Say Hello", None, say_hello),
+                    ("Switch Icon", None, switch_icon),
+                    ("Silently Switch Icon", None, silent_switch_icon),)
+    systray = SysTrayIcon("icon.ico", "Example tray icon", menu_options)
+    systray.start()
+
+	
 Note that in the previous examples, if no code is executed after calling systray.start(), the main thread will
 exit and the icon thread will continue to exist until the Quit option is selected. In order to catch keyboard
 interrupts, some code must be written that will call systray.shutdown when the program should quit.

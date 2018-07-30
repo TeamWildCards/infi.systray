@@ -27,15 +27,16 @@ GetSysColorBrush = ctypes.windll.user32.GetSysColorBrush
 FillRect = ctypes.windll.user32.FillRect
 DrawIconEx = ctypes.windll.user32.DrawIconEx
 SelectObject = ctypes.windll.gdi32.SelectObject
+DeleteObject = ctypes.windll.gdi32.DeleteObject
 DeleteDC = ctypes.windll.gdi32.DeleteDC
 DestroyWindow = ctypes.windll.user32.DestroyWindow
+DestroyMenu = ctypes.windll.user32.DestroyMenu
 GetModuleHandle = ctypes.windll.kernel32.GetModuleHandleA
 GetMessage = ctypes.windll.user32.GetMessageA
 TranslateMessage = ctypes.windll.user32.TranslateMessage
 DispatchMessage = ctypes.windll.user32.DispatchMessageA
 Shell_NotifyIcon = ctypes.windll.shell32.Shell_NotifyIcon
 DestroyIcon = ctypes.windll.user32.DestroyIcon
-DestroyMenu = ctypes.windll.user32.DestroyMenu
 
 NIM_ADD = 0
 NIM_MODIFY = 1
