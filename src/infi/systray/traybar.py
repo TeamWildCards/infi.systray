@@ -37,6 +37,7 @@ class SysTrayIcon(object):
         self._hover_text = hover_text
         self._on_quit = on_quit
 
+        self._icon_bitmaps = []
         self._menu = None
         self._set_menu_options(menu_options)
 
@@ -211,11 +212,10 @@ class SysTrayIcon(object):
         if self._menu is not None:
             DestroyMenu(self._menu)
             self._menu = None
-        if self._hicon != 0:
+        if not self._icon_shared and self._hicon != 0:
             DestroyIcon(self._hicon)
             self._hicon = 0
-        # TODO * release loaded menu icons (loaded in _load_menu_icon) with DeleteObject
-        #        (we don't keep those objects anywhere now)
+        self._destroy_menu_icon_bitmaps()
         self._hwnd = None
         self._notify_id = None
 
@@ -248,6 +248,7 @@ class SysTrayIcon(object):
         PostMessage(self._hwnd, WM_NULL, 0, 0)
 
     def _create_menu(self, menu, menu_options):
+        self._destroy_menu_icon_bitmaps()
         for option_text, option_icon, option_action, option_id in menu_options[::-1]:
             if option_icon:
                 option_icon = self._prep_menu_icon(option_icon)
@@ -286,9 +287,16 @@ class SysTrayIcon(object):
         # No need to free the brush
         DeleteDC(hdcBitmap)
         DestroyIcon(hicon)
-
+        
+        # Append the handle of this bitmap to the current list of icon bitmaps
+        self._icon_bitmaps.append(hbm)
         return hbm
 
+    def _destroy_menu_icon_bitmaps(self):
+        for hbm in self._icon_bitmaps:
+            DeleteObject(hbm)
+        del self._icon_bitmaps[:]
+        
     def _command(self, hwnd, msg, wparam, lparam):
         id = LOWORD(wparam)
         self._execute_menu_option(id)

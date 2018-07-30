@@ -27,6 +27,7 @@ GetSysColorBrush = ctypes.windll.user32.GetSysColorBrush
 FillRect = ctypes.windll.user32.FillRect
 DrawIconEx = ctypes.windll.user32.DrawIconEx
 SelectObject = ctypes.windll.gdi32.SelectObject
+DeleteObject = ctypes.windll.gdi32.DeleteObject
 DeleteDC = ctypes.windll.gdi32.DeleteDC
 DestroyWindow = ctypes.windll.user32.DestroyWindow
 GetModuleHandle = ctypes.windll.kernel32.GetModuleHandleA
