@@ -249,6 +249,9 @@ class SysTrayIcon(object):
 
     def _create_menu(self, menu, menu_options):
         self._destroy_menu_icon_bitmaps()
+        self._create_submenu(menu, menu_options)
+                
+    def _create_submenu(self, menu, menu_options):
         for option_text, option_icon, option_action, option_id in menu_options[::-1]:
             if option_icon:
                 option_icon = self._prep_menu_icon(option_icon)
@@ -260,7 +263,7 @@ class SysTrayIcon(object):
                 InsertMenuItem(menu, 0, 1, ctypes.byref(item))
             else:
                 submenu = CreatePopupMenu()
-                self._create_menu(submenu, option_action)
+                self._create_submenu(submenu, option_action)
                 item = PackMENUITEMINFO(text=option_text,
                                         hbmpItem=option_icon,
                                         hSubMenu=submenu)
@@ -279,7 +282,7 @@ class SysTrayIcon(object):
         hbmOld = SelectObject(hdcBitmap, hbm)
         # Fill the background.
         brush = GetSysColorBrush(COLOR_MENU)
-        FillRect(hdcBitmap, ctypes.byref(RECT(0, 0, 16, 16)), brush)
+        FillRect(hdcBitmap, ctypes.byref(RECT(0, 0, ico_x, ico_y)), brush)
         # draw the icon
         DrawIconEx(hdcBitmap, 0, 0, hicon, ico_x, ico_y, 0, 0, DI_NORMAL)
         SelectObject(hdcBitmap, hbmOld)
@@ -291,6 +294,37 @@ class SysTrayIcon(object):
         # Append the handle of this bitmap to the current list of icon bitmaps
         self._icon_bitmaps.append(hbm)
         return hbm
+        
+        
+        
+        #alternative implementation using win32ui, also seems to work
+        
+        
+        #icon = encode_for_locale(icon)       
+       
+        # ico_x = GetSystemMetrics(SM_CXSMICON)
+        # ico_y = GetSystemMetrics(SM_CYSMICON)
+        # hIcon = LoadImage(0, icon, IMAGE_ICON, ico_x, ico_y, LR_LOADFROMFILE)
+
+        # hwin = GetDesktopWindow()
+        # hwndDC = GetWindowDC(hwin)
+        # dc = win32ui.CreateDCFromHandle(hwndDC)
+        # memDC = dc.CreateCompatibleDC()
+        # iconBitmap = win32ui.CreateBitmap()
+        # iconBitmap.CreateCompatibleBitmap(dc, ico_x, ico_y)
+        # oldBmp = memDC.SelectObject(iconBitmap)
+        # brush = GetSysColorBrush(COLOR_MENU)
+
+        # FillRect(memDC.GetSafeHdc(), ctypes.byref(RECT(0, 0, ico_x, ico_y)), brush)
+        # DrawIconEx(memDC.GetSafeHdc(), 0, 0, hIcon, ico_x, ico_y, 0, 0, DI_NORMAL)
+
+        # memDC.SelectObject(oldBmp)
+        # memDC.DeleteDC()
+        # ReleaseDC(hwin, hwndDC)
+
+        # DestroyIcon(hIcon)
+        # self._icon_bitmaps.append(iconBitmap.GetHandle())
+        # return iconBitmap.GetHandle()     
 
     def _destroy_menu_icon_bitmaps(self):
         for hbm in self._icon_bitmaps:
