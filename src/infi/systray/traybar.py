@@ -2,6 +2,7 @@ import os
 from .win32_adapter import *
 import threading
 import uuid
+#import win32ui
 
 class SysTrayIcon(object):
     """
@@ -249,6 +250,9 @@ class SysTrayIcon(object):
 
     def _create_menu(self, menu, menu_options):
         self._destroy_menu_icon_bitmaps()
+        self._create_submenu(menu, menu_options)
+                
+    def _create_submenu(self, menu, menu_options):
         for option_text, option_icon, option_action, option_id in menu_options[::-1]:
             if option_icon:
                 option_icon = self._prep_menu_icon(option_icon)
@@ -260,14 +264,15 @@ class SysTrayIcon(object):
                 InsertMenuItem(menu, 0, 1, ctypes.byref(item))
             else:
                 submenu = CreatePopupMenu()
-                self._create_menu(submenu, option_action)
+                self._create_submenu(submenu, option_action)
                 item = PackMENUITEMINFO(text=option_text,
                                         hbmpItem=option_icon,
                                         hSubMenu=submenu)
                 InsertMenuItem(menu, 0, 1,  ctypes.byref(item))
-
+                
     def _prep_menu_icon(self, icon):
         icon = encode_for_locale(icon)
+        
         # First load the icon.
         ico_x = GetSystemMetrics(SM_CXSMICON)
         ico_y = GetSystemMetrics(SM_CYSMICON)
@@ -279,7 +284,7 @@ class SysTrayIcon(object):
         hbmOld = SelectObject(hdcBitmap, hbm)
         # Fill the background.
         brush = GetSysColorBrush(COLOR_MENU)
-        FillRect(hdcBitmap, ctypes.byref(RECT(0, 0, 16, 16)), brush)
+        FillRect(hdcBitmap, ctypes.byref(RECT(0, 0, ico_x, ico_y)), brush)
         # draw the icon
         DrawIconEx(hdcBitmap, 0, 0, hicon, ico_x, ico_y, 0, 0, DI_NORMAL)
         SelectObject(hdcBitmap, hbmOld)
@@ -291,6 +296,37 @@ class SysTrayIcon(object):
         # Append the handle of this bitmap to the current list of icon bitmaps
         self._icon_bitmaps.append(hbm)
         return hbm
+        
+        
+        
+        #alternative implementation using win32ui, also seems to work
+        
+        
+        #icon = encode_for_locale(icon)       
+       
+        # ico_x = GetSystemMetrics(SM_CXSMICON)
+        # ico_y = GetSystemMetrics(SM_CYSMICON)
+        # hIcon = LoadImage(0, icon, IMAGE_ICON, ico_x, ico_y, LR_LOADFROMFILE)
+
+        # hwin = GetDesktopWindow()
+        # hwndDC = GetWindowDC(hwin)
+        # dc = win32ui.CreateDCFromHandle(hwndDC)
+        # memDC = dc.CreateCompatibleDC()
+        # iconBitmap = win32ui.CreateBitmap()
+        # iconBitmap.CreateCompatibleBitmap(dc, ico_x, ico_y)
+        # oldBmp = memDC.SelectObject(iconBitmap)
+        # brush = GetSysColorBrush(COLOR_MENU)
+
+        # FillRect(memDC.GetSafeHdc(), ctypes.byref(RECT(0, 0, ico_x, ico_y)), brush)
+        # DrawIconEx(memDC.GetSafeHdc(), 0, 0, hIcon, ico_x, ico_y, 0, 0, DI_NORMAL)
+
+        # memDC.SelectObject(oldBmp)
+        # memDC.DeleteDC()
+        # ReleaseDC(hwin, hwndDC)
+
+        # DestroyIcon(hIcon)
+        # self._icon_bitmaps.append(iconBitmap.GetHandle())
+        # return iconBitmap.GetHandle()     
 
     def _destroy_menu_icon_bitmaps(self):
         for hbm in self._icon_bitmaps:
@@ -307,18 +343,29 @@ class SysTrayIcon(object):
             DestroyWindow(self._hwnd)
         else:
             index = 0
-            for menu_option in self._menu_options:
-                option_text, option_icon, option_action, option_id = menu_option
-                if option_id == id:
-                    break;
-                index = index + 1
-            if index == len(self._menu_options):
-                #we didn't find the menu item
-                index = -1
-                option_text = None
+            index, option_text, option_id = self._find_menu_option(index, self._menu_options, id)
             #pass index and option_text as keywork arguments in case the recipient wants to ignore them by way of **kwargs
             menu_action(self, index_number=index, menu_text=option_text)
-
+            
+    def _find_menu_option(self, index, menu_options, id):
+        menu_option = None
+        found = False
+        if isinstance(menu_options,(list,)):
+            for menu_option in menu_options:
+                option_text, option_icon, option_action, option_id = menu_option
+                if option_id == id:
+                    found = True
+                    break;
+                if isinstance(option_action,(list,)): #if it is a list, then we should iterate over it too
+                    index, option_text, option_id = self._find_menu_option(index, option_action, id)
+                    if option_id == id:
+                        found = True
+                        break;
+                index = index + 1
+            if found == False:
+                option_text = None     
+        return index, option_text, option_id
+        
 def non_string_iterable(obj):
     try:
         iter(obj)

@@ -59,11 +59,11 @@ value of an option, instead of passing a callback function. e.g.
 
     from infi.systray import SysTrayIcon
     hover_text = "SysTrayIcon Demo"
-    def hello(sysTrayIcon, index, option_text):
+    def hello(sysTrayIcon, index_number, menu_text):
         print("Hello World.")
-    def simon(sysTrayIcon, index, option_text):
+    def simon(sysTrayIcon, index_number, menu_text):
         print("Hello Simon.")
-    def bye(sysTrayIcon, index, option_text):
+    def bye(sysTrayIcon, index_number, menu_text):
         print('Bye, then.')
     def do_nothing(sysTrayIcon, **kwargs):
         pass
@@ -81,13 +81,13 @@ And another example:
     from infi.systray import SysTrayIcon
     import itertools, glob
     icons = itertools.cycle(glob.glob('*.ico'))
-    def say_hello(systray, index, option_text):
+    def say_hello(systray, index_number, menu_text):
         print("Hello, World!")
-        print("You clicked '%s' which was index number %d" % (option_text, index))
+        print("You clicked '%s' which was index number %d" % (menu_text, index_number))
         systray.update(menu_options=(("You already clicked hello", None, say_hello),))
-    def switch_icon(systray, index, option_text):
+    def switch_icon(systray, index_number, menu_text):
         systray.update(icon=next(icons))
-        print("You clicked '%s' which was index number %d" % (option_text, index))
+        print("You clicked '%s' which was index number %d" % (menu_text, index_number))
     def silent_switch_icon(systray, **kwargs):
         systray.update(icon=next(icons))
     menu_options = (("Say Hello", None, say_hello),
